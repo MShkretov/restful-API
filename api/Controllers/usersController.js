@@ -73,6 +73,33 @@ exports.signup_user = (req, res, next) => {
         });
 };
 
+exports.update_user = (req, res, next) => {
+    const id = req.params.userId;
+    const updateOps = {};
+    for (const ops of req.body) {
+        updateOps[ops.propName] = ops.value;
+    }
+    User.findByIdAndUpdate(id, { $set: updateOps }, { new: true })
+        .exec()
+        .then(updatedUser => {
+            if (updatedUser) {
+                res.status(200).json({
+                    message: 'User updated',
+                    updatedUser: updatedUser,
+                    request: {
+                        type: 'GET',
+                        url: 'http://localhost:3000/users/' + updatedUser._id
+                    }
+                });
+            } else {
+                res.status(404).json({ message: 'User not found' });
+            }
+        })
+        .catch(err => {
+            res.status(500).json({ error: err });
+        });
+};
+
 exports.login_user = (req, res, next) => {
     User.findOne({ email: req.body.email })
         .exec()

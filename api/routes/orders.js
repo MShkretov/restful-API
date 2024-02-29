@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const Order = require('../models/order');
 const Product = require('../models/product');
 
+const ProductsController = require('../Controllers/productsController');
 const OrdersController = require('../Controllers/ordersController');
 
 router.get('/', OrdersController.get_all);
@@ -12,6 +13,8 @@ router.get('/', OrdersController.get_all);
 router.post('/', OrdersController.create_order);
 
 router.get('/:orderId', OrdersController.get_order);
+
+router.patch('/:orderId', OrdersController.update_order)
 
 router.delete('/:orderId', OrdersController.delete_order);
 

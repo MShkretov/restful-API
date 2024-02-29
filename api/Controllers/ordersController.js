@@ -1,4 +1,8 @@
+const order = require('../models/order');
 const Order = require('../models/order');
+const product = require('../models/product');
+const Product = require('../models/product');
+const mongoose = require('mongoose');
 
 exports.get_all = (req, res, next) => {
     Order.find()
@@ -97,16 +101,21 @@ exports.update_order = (req, res, next) => {
     for (const ops of req.body) {
         updateOps[ops.propName] = ops.value;
     }
-    Order.update({ _id: id }, { $set: updateOps })
+    Order.findByIdAndUpdate(id, { $set: updateOps }, { new: true })
         .exec()
         .then(result => {
-            res.status(200).json({
-                message: 'Order updated',
-                request: {
-                    type: 'GET',
-                    url: 'http://localhost:3000/orders/' + id
-                }
-            });
+            if (result) {
+                res.status(200).json({
+                    message: 'Order updated',
+                    updatedOrder: result,
+                    request: {
+                        type: 'GET',
+                        url: 'http://localhost:3000/orders/' + result._id
+                    }
+                });
+            } else {
+                res.status(404).json({ message: 'Order not found' });
+            }
         })
         .catch(err => {
             res.status(500).json({ error: err });
