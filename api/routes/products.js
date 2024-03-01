@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 
 const ProductsController = require('../Controllers/productsController');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -28,6 +29,8 @@ const upload = multer({
     },
     fileFilter: fileFilter
 });
+
+router.use(authMiddleware.verifyToken);
 
 router.get('/', ProductsController.get_all_products);
 
