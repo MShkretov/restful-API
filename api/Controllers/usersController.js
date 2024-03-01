@@ -5,7 +5,7 @@ const User = require('../models/user');
 
 exports.get_all_users = (req, res, next) => {
     User.find()
-        .select('_id name email')
+        .select('_id email firstName lastName age country city')
         .exec()
         .then(users => {
             const response = {
@@ -13,8 +13,12 @@ exports.get_all_users = (req, res, next) => {
                 users: users.map(user => {
                     return {
                         _id: user._id,
-                        name: user.name,
                         email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        age: user.age,
+                        country: user.country,
+                        city: user.city,
                         request: {
                             type: 'GET',
                             url: 'http://localhost:3000/users/' + user._id
@@ -45,7 +49,12 @@ exports.signup_user = (req, res, next) => {
                         const user = new User({
                             _id: new mongoose.Types.ObjectId(),
                             email: req.body.email,
-                            password: hash
+                            password: hash,
+                            firstName: req.body.firstName,
+                            lastName: req.body.lastName,
+                            age: req.body.age,
+                            country: req.body.country,
+                            city: req.body.city
                         });
                         user.save()
                             .then(result => {
@@ -54,6 +63,11 @@ exports.signup_user = (req, res, next) => {
                                     createdUser: {
                                         _id: result._id,
                                         email: result.email,
+                                        firstName: result.firstName,
+                                        lastName: result.lastName,
+                                        age: result.age,
+                                        country: result.country,
+                                        city: result.city,
                                         request: {
                                             type: 'GET',
                                             url: 'http://localhost:3000/users/' + result._id
@@ -139,7 +153,7 @@ exports.login_user = (req, res, next) => {
 exports.get_user_by_id = (req, res, next) => {
     const id = req.params.userId;
     User.findById(id)
-        .select('_id name email')
+        .select('_id email firstName lastName age country city')
         .exec()
         .then(user => {
             if (user) {
@@ -169,7 +183,15 @@ exports.delete_user = (req, res, next) => {
                 request: {
                     type: 'POST',
                     url: 'http://localhost:3000/users/signup',
-                    body: { name: 'String', email: 'String' }
+                    body: { 
+                        email: 'String', 
+                        password: 'String',
+                        firstName: 'String',
+                        lastName: 'String',
+                        age: 'Number',
+                        country: 'String',
+                        city: 'String'
+                    }
                 }
             });
         })
