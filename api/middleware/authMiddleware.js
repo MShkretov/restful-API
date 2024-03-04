@@ -8,10 +8,10 @@ exports.verifyToken = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, 'secret_key');
+        const decoded = jwt.verify(token, 'miro');
         req.user = decoded;
         next();
     } catch (error) {
         return res.status(401).json({ message: 'Invalid token' });
     }
-};
+}

@@ -1,103 +1,76 @@
 const product = require('../models/product');
 const Product = require('../models/product');
 const mongoose = require('mongoose');
+const mysql = require('mysql2');
+
+const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'csmanqka1',
+    database: 'restfullapi',
+});
 
 exports.get_all_products = (req, res, next) => {
-    Product.find()
-        .select('name price _id')
-        .exec()
-        .then(docs => {
-            const response = {
-                count: docs.length,
-                products: docs.map(doc => {
-                    return {
-                        name: doc.name,
-                        price: doc.price,
-                        _id: doc.id,
-                        request: {
-                            type: 'GET',
-                            url: 'http://localhost:3000/products/' + doc._id
-                        }
-                    }
-                })
-            };
-            res.status(200).json(response);
-        })
-        .catch(err => {
-            res.status(500).json({ error: err });
-        });
+    const sql = 'SELECT * FROM products';
+    connection.query(sql, (err, results, fields) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        res.status(200).json(results);
+    });
 };
 
 exports.get_product = (req, res, next) => {
     const id = req.params.productId;
-    Product.findById(id)
-        .select('name price')
-        .exec()
-        .then(product => {
-            if (product) {
-                res.status(200).json({
-                    name: product.name,
-                    price: product.price,
-                    request: {
-                        type: 'GET',
-                        url: 'http://localhost:3000/products'
-                    }
-                });
-            } else {
-                res.status(404).json({ message: 'Product not found' });
-            }
-        })
-        .catch(err => {
-            res.status(500).json({ error: err });
-        });
+    const sql = 'SELECT * FROM products WHERE id = ?';
+    connection.execute(sql, [id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        res.status(200).json(result[0]);
+    });
 };
 
 exports.update_product = (req, res, next) => {
     const id = req.params.productId;
-    const updateOps = {};
-    for (const ops of req.body) {
-        updateOps[ops.propName] = ops.value;
-    }
-    Product.findByIdAndUpdate(id, { $set: updateOps }, { new: true })
-        .exec()
-        .then(updatedProduct => {
-            if (updatedProduct) {
-                res.status(200).json({
-                    message: 'Product updated successfully',
-                    updatedProduct: updatedProduct
-                });
-            } else {
-                res.status(404).json({ message: 'Product not found' });
-            }
-        })
-        .catch(err => {
-            res.status(500).json({ error: err });
-        });
+    const { name, price } = req.body;
+    const sql = 'UPDATE products SET name=?, price=? WHERE id=?';
+    connection.execute(sql, [name, price, id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        res.status(200).json({ message: 'Product updated successfully' });
+    });
 };
 
 exports.create_product = (req, res, next) => {
-    const product = new Product({
-        _id: new mongoose.Types.ObjectId(),
-        name: req.body.name,
-        price: req.body.price
-    });
-
-    product.save()
-        .then(result => {
-            res.status(201).json({
-                message: 'Created product successfully',
-                createdProduct: {
-                    name: result.name,
-                    price: result.price,
-                    _id: result._id,
-                    request: {
-                        type: 'GET',
-                        url: 'http://localhost:3000/products/' + result._id
-                    }
-                }
-            });
-        })
-        .catch(err => {
-            res.status(500).json({ error: err });
+    const { name, price } = req.body;
+    const sql = 'INSERT INTO products (name, price) VALUES (?, ?)';
+    connection.execute(sql, [name, price], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        res.status(201).json({
+            message: 'Product created successfully',
+            createdProduct: {
+                id: result.insertId,
+                name,
+                price
+            }
         });
+    });
+};
+
+exports.delete_product = (req, res, next) => {
+    const id = req.params.productId;
+    const sql = 'DELETE FROM products WHERE id = ?';
+    connection.execute(sql, [id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        res.status(200).json({ message: 'Product deleted successfully' });
+    });
 };

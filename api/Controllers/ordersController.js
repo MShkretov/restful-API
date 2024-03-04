@@ -38,23 +38,16 @@ exports.create_order = (req, res, next) => {
         return res.status(400).json({ message: 'Invalid productId' });
     }
 
-    Product.findById(productId)
-        .then(product => {
-            if (!product) {
-                return res.status(404).json({ message: 'Product not found' });
-            }
+    const order = new Order({
+        _id: new mongoose.Types.ObjectId(),
+        quantity: req.body.quantity,
+        product: productId
+    });
 
-            const order = new Order({
-                _id: new mongoose.Types.ObjectId(),
-                quantity: req.body.quantity,
-                product: productId
-            });
-
-            return order.save();
-        })
+    order.save()
         .then(result => {
             res.status(201).json({
-                message: 'Order created successfully',
+                message: 'Order created successfully in MongoDB',
                 createdOrder: {
                     _id: result._id,
                     product: result.product,
@@ -67,6 +60,7 @@ exports.create_order = (req, res, next) => {
             });
         })
         .catch(err => {
+            console.error(err); // Log the error
             res.status(500).json({ error: err });
         });
 };
